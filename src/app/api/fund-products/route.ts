@@ -5,7 +5,7 @@ import type { FundProduct } from "@/lib/types";
 
 export const GET = withAuth(async () => {
   try {
-    const products = query<FundProduct>(
+    const products = await query<FundProduct>(
       "SELECT * FROM fund_products WHERE is_active = 1 ORDER BY product_name ASC"
     );
 

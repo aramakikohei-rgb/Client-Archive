@@ -42,7 +42,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const payload = await verifyToken(token);
   if (!payload) return null;
 
-  const user = queryOne<UserWithPassword>(
+  const user = await queryOne<UserWithPassword>(
     "SELECT * FROM users WHERE id = ? AND is_active = 1",
     [payload.userId]
   );

@@ -8,7 +8,7 @@ export const POST = withAuth(async (_request, { user, params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const interaction = queryOne<Interaction>(
+    const interaction = await queryOne<Interaction>(
       "SELECT * FROM interactions WHERE id = ?",
       [id]
     );
@@ -23,12 +23,12 @@ export const POST = withAuth(async (_request, { user, params }) => {
       );
     }
 
-    execute(
+    await execute(
       "UPDATE interactions SET is_locked = 1, locked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [id]
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "LOCK_INTERACTION",
@@ -37,7 +37,7 @@ export const POST = withAuth(async (_request, { user, params }) => {
       entityName: interaction.subject,
     });
 
-    const updated = queryOne(
+    const updated = await queryOne(
       `SELECT i.*, u.full_name as created_by_name
        FROM interactions i
        JOIN users u ON i.created_by = u.id

@@ -9,7 +9,7 @@ export const GET = withAuth(async (_request, { params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const client = queryOne<Client>(
+    const client = await queryOne<Client>(
       "SELECT * FROM clients WHERE id = ?",
       [id]
     );
@@ -17,12 +17,12 @@ export const GET = withAuth(async (_request, { params }) => {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    const contacts = query(
+    const contacts = await query(
       "SELECT * FROM client_contacts WHERE client_id = ? AND is_active = 1 ORDER BY is_primary_contact DESC, last_name ASC",
       [id]
     );
 
-    const products = query(
+    const products = await query(
       `SELECT cp.*, fp.product_name, fp.product_type
        FROM client_products cp
        JOIN fund_products fp ON cp.product_id = fp.id
@@ -31,13 +31,13 @@ export const GET = withAuth(async (_request, { params }) => {
       [id]
     );
 
-    const recentInteractionsCount = queryOne<{ count: number }>(
+    const recentInteractionsCount = await queryOne<{ count: number }>(
       "SELECT COUNT(*) as count FROM interactions WHERE client_id = ? AND interaction_date >= datetime('now', '-90 days')",
       [id]
     );
 
     const assignedRm = client.assigned_rm_id
-      ? queryOne<{ full_name: string }>(
+      ? await queryOne<{ full_name: string }>(
           "SELECT full_name FROM users WHERE id = ?",
           [client.assigned_rm_id]
         )
@@ -67,7 +67,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
       );
     }
 
-    const existing = queryOne<Client>(
+    const existing = await queryOne<Client>(
       "SELECT * FROM clients WHERE id = ?",
       [id]
     );
@@ -98,12 +98,12 @@ export const PUT = withAuth(async (request, { user, params }) => {
     fields.push("updated_at = CURRENT_TIMESTAMP");
     values.push(id);
 
-    execute(
+    await execute(
       `UPDATE clients SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "UPDATE",
@@ -113,7 +113,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
       details: { changed_fields: changedFields },
     });
 
-    const updated = queryOne("SELECT * FROM clients WHERE id = ?", [id]);
+    const updated = await queryOne("SELECT * FROM clients WHERE id = ?", [id]);
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -124,7 +124,7 @@ export const DELETE = withRole(["admin"], async (_request, { user, params }) => 
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const existing = queryOne<Client>(
+    const existing = await queryOne<Client>(
       "SELECT * FROM clients WHERE id = ?",
       [id]
     );
@@ -132,12 +132,12 @@ export const DELETE = withRole(["admin"], async (_request, { user, params }) => 
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    execute(
+    await execute(
       "UPDATE clients SET relationship_status = 'former', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [id]
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "DELETE",

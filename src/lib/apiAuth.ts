@@ -29,7 +29,7 @@ export function withAuth(handler: AuthHandler) {
       const { payload } = await jwtVerify(token, secret);
       const userId = payload.userId as number;
 
-      const user = queryOne<UserWithPassword>(
+      const user = await queryOne<UserWithPassword>(
         "SELECT * FROM users WHERE id = ? AND is_active = 1",
         [userId]
       );

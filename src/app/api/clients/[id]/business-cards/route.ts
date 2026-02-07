@@ -20,13 +20,13 @@ export const GET = withAuth(async (request, { user, params }) => {
     queryParams.push(like, like, like, like);
   }
 
-  const countResult = queryOne<{ count: number }>(
+  const countResult = await queryOne<{ count: number }>(
     `SELECT COUNT(*) as count FROM business_cards bc ${where}`,
     queryParams
   );
   const total = countResult?.count || 0;
 
-  const data = query(
+  const data = await query(
     `SELECT bc.*, u.full_name as owner_name
      FROM business_cards bc
      LEFT JOIN users u ON bc.owner_user_id = u.id

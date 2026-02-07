@@ -63,13 +63,13 @@ export const GET = withAuth(async (request) => {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const countResult = queryOne<{ count: number }>(
+    const countResult = await queryOne<{ count: number }>(
       `SELECT COUNT(*) as count FROM interaction_timeline ${whereClause}`,
       params
     );
     const total = countResult?.count || 0;
 
-    const data = query<Interaction>(
+    const data = await query<Interaction>(
       `SELECT * FROM interaction_timeline ${whereClause} ORDER BY interaction_date DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
@@ -101,7 +101,7 @@ export const POST = withAuth(async (request, { user }) => {
 
     const data = parsed.data;
 
-    const client = queryOne<{ id: number; company_name: string }>(
+    const client = await queryOne<{ id: number; company_name: string }>(
       "SELECT id, company_name FROM clients WHERE id = ?",
       [data.client_id]
     );
@@ -109,7 +109,7 @@ export const POST = withAuth(async (request, { user }) => {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO interactions (
         client_id, interaction_type, subject, description, interaction_date,
         duration_minutes, location, meeting_objective, meeting_outcome,
@@ -140,7 +140,7 @@ export const POST = withAuth(async (request, { user }) => {
 
     const interactionId = Number(result.lastInsertRowid);
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",
@@ -150,7 +150,7 @@ export const POST = withAuth(async (request, { user }) => {
       details: { client_id: data.client_id, client_name: client.company_name, interaction_type: data.interaction_type },
     });
 
-    const created = queryOne(
+    const created = await queryOne(
       `SELECT i.*, u.full_name as created_by_name
        FROM interactions i
        JOIN users u ON i.created_by = u.id

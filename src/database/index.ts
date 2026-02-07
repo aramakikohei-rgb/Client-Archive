@@ -1,25 +1,21 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import { createClient, type Client, type InValue } from "@libsql/client";
 
-let db: Database.Database | null = null;
+let client: Client | null = null;
 
-export function getDatabase(): Database.Database {
-  if (!db) {
-    const dbPath = path.join(process.cwd(), "data", "cimp.db");
-    const dir = path.dirname(dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    db = new Database(dbPath);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
+function getClient(): Client {
+  if (!client) {
+    client = createClient({
+      url: process.env.TURSO_DATABASE_URL || "file:data/cimp.db",
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
   }
-  return db;
+  return client;
 }
 
-export function initializeDatabase(): void {
-  const database = getDatabase();
+export async function initializeDatabase(): Promise<void> {
+  const db = getClient();
+  const fs = await import("fs");
+  const path = await import("path");
   const schemaPath = path.join(process.cwd(), "src", "database", "schema.sql");
   const schema = fs.readFileSync(schemaPath, "utf-8");
   const statements = schema
@@ -27,42 +23,76 @@ export function initializeDatabase(): void {
     .map((s) => s.trim())
     .filter((s) => s.length > 0 && !s.startsWith("PRAGMA"));
 
-  database.pragma("journal_mode = WAL");
-  database.pragma("foreign_keys = ON");
+  await db.execute("PRAGMA journal_mode = WAL");
+  await db.execute("PRAGMA foreign_keys = ON");
 
   for (const statement of statements) {
-    database.exec(statement + ";");
+    await db.execute(statement + ";");
   }
 }
 
-export function query<T = Record<string, unknown>>(
+export async function query<T = Record<string, unknown>>(
   sql: string,
   params?: unknown[]
-): T[] {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  return (params ? stmt.all(...params) : stmt.all()) as T[];
+): Promise<T[]> {
+  const db = getClient();
+  const result = await db.execute({
+    sql,
+    args: (params || []) as InValue[],
+  });
+  return result.rows as T[];
 }
 
-export function queryOne<T = Record<string, unknown>>(
+export async function queryOne<T = Record<string, unknown>>(
   sql: string,
   params?: unknown[]
-): T | undefined {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  return (params ? stmt.get(...params) : stmt.get()) as T | undefined;
+): Promise<T | undefined> {
+  const db = getClient();
+  const result = await db.execute({
+    sql,
+    args: (params || []) as InValue[],
+  });
+  return result.rows[0] as T | undefined;
 }
 
-export function execute(
+export async function execute(
   sql: string,
   params?: unknown[]
-): Database.RunResult {
-  const database = getDatabase();
-  const stmt = database.prepare(sql);
-  return params ? stmt.run(...params) : stmt.run();
+): Promise<{ lastInsertRowid: number; changes: number }> {
+  const db = getClient();
+  const result = await db.execute({
+    sql,
+    args: (params || []) as InValue[],
+  });
+  return {
+    lastInsertRowid: Number(result.lastInsertRowid),
+    changes: result.rowsAffected,
+  };
 }
 
-export function transaction<T>(fn: () => T): T {
-  const database = getDatabase();
-  return database.transaction(fn)();
+export async function transaction<T>(
+  fn: (tx: { execute: typeof execute; query: typeof query; queryOne: typeof queryOne }) => Promise<T>
+): Promise<T> {
+  const db = getClient();
+  const tx = await db.transaction("write");
+  try {
+    const txExecute = async (sql: string, params?: unknown[]) => {
+      const result = await tx.execute({ sql, args: (params || []) as InValue[] });
+      return { lastInsertRowid: Number(result.lastInsertRowid), changes: result.rowsAffected };
+    };
+    const txQuery = async <Q = Record<string, unknown>>(sql: string, params?: unknown[]) => {
+      const result = await tx.execute({ sql, args: (params || []) as InValue[] });
+      return result.rows as Q[];
+    };
+    const txQueryOne = async <Q = Record<string, unknown>>(sql: string, params?: unknown[]) => {
+      const result = await tx.execute({ sql, args: (params || []) as InValue[] });
+      return result.rows[0] as Q | undefined;
+    };
+    const result = await fn({ execute: txExecute as typeof execute, query: txQuery as typeof query, queryOne: txQueryOne as typeof queryOne });
+    await tx.commit();
+    return result;
+  } catch (e) {
+    await tx.rollback();
+    throw e;
+  }
 }

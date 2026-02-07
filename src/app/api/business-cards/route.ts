@@ -27,13 +27,13 @@ export const GET = withAuth(async (request) => {
     params.push(Number(isDigitized));
   }
 
-  const countResult = queryOne<{ count: number }>(
+  const countResult = await queryOne<{ count: number }>(
     `SELECT COUNT(*) as count FROM business_cards bc ${where}`,
     params
   );
   const total = countResult?.count || 0;
 
-  const data = query(
+  const data = await query(
     `SELECT bc.*, u.full_name as owner_name
      FROM business_cards bc
      LEFT JOIN users u ON bc.owner_user_id = u.id
@@ -84,13 +84,13 @@ export const POST = withAuth(async (request, { user }) => {
     const notes = (formData.get("notes") as string) || null;
     const tags = (formData.get("tags") as string) || null;
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO business_cards (image_path, company_name, person_name, department, title, phone, mobile, email, address, website, exchange_date, client_id, owner_user_id, notes, tags)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [imagePath, companyName, personName, department, title, phone, mobile, email, address, website, exchangeDate, clientId, user.id, notes, tags]
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",

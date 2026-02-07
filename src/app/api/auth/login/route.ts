@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = parsed.data;
 
-    const user = queryOne<UserWithPassword>(
+    const user = await queryOne<UserWithPassword>(
       "SELECT * FROM users WHERE email = ? AND is_active = 1",
       [email]
     );
@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
     await setAuthCookie(token);
 
     // Update last login
-    execute("UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?", [user.id]);
+    await execute("UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?", [user.id]);
 
     // Audit log
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "LOGIN",

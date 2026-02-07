@@ -8,12 +8,12 @@ export const GET = withAuth(async (_request, { params }) => {
   try {
     const clientId = parseInt(params?.id || "0", 10);
 
-    const client = queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
+    const client = await queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
     if (!client) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    const products = query<ClientProduct>(
+    const products = await query<ClientProduct>(
       `SELECT cp.*, fp.product_name, fp.product_type, fp.product_name_en
        FROM client_products cp
        JOIN fund_products fp ON cp.product_id = fp.id
@@ -32,7 +32,7 @@ export const POST = withAuth(async (request, { user, params }) => {
   try {
     const clientId = parseInt(params?.id || "0", 10);
 
-    const client = queryOne<{ id: number; company_name: string }>(
+    const client = await queryOne<{ id: number; company_name: string }>(
       "SELECT id, company_name FROM clients WHERE id = ?",
       [clientId]
     );
@@ -47,7 +47,7 @@ export const POST = withAuth(async (request, { user, params }) => {
       return NextResponse.json({ error: "product_id is required" }, { status: 400 });
     }
 
-    const product = queryOne<{ id: number; product_name: string }>(
+    const product = await queryOne<{ id: number; product_name: string }>(
       "SELECT id, product_name FROM fund_products WHERE id = ?",
       [product_id]
     );
@@ -55,7 +55,7 @@ export const POST = withAuth(async (request, { user, params }) => {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO client_products (
         client_id, product_id, facility_amount_jpy, spread_bps,
         start_date, maturity_date, status, notes, created_by
@@ -75,7 +75,7 @@ export const POST = withAuth(async (request, { user, params }) => {
 
     const associationId = Number(result.lastInsertRowid);
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",
@@ -85,7 +85,7 @@ export const POST = withAuth(async (request, { user, params }) => {
       details: { client_id: clientId, product_id },
     });
 
-    const created = queryOne(
+    const created = await queryOne(
       `SELECT cp.*, fp.product_name, fp.product_type
        FROM client_products cp
        JOIN fund_products fp ON cp.product_id = fp.id

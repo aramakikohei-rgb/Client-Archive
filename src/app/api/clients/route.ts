@@ -59,13 +59,13 @@ export const GET = withAuth(async (request) => {
     ];
     const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : "company_name";
 
-    const countResult = queryOne<{ count: number }>(
+    const countResult = await queryOne<{ count: number }>(
       `SELECT COUNT(*) as count FROM client_summary ${whereClause}`,
       params
     );
     const total = countResult?.count || 0;
 
-    const data = query<ClientSummary>(
+    const data = await query<ClientSummary>(
       `SELECT * FROM client_summary ${whereClause} ORDER BY ${safeSortBy} ${sortOrder} LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
@@ -97,7 +97,7 @@ export const POST = withRole(["admin", "manager"], async (request, { user }) => 
 
     const data = parsed.data;
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO clients (
         company_name, company_name_kana, company_name_en, industry, sub_industry,
         company_type, registration_number, address, address_en, city, country,
@@ -133,7 +133,7 @@ export const POST = withRole(["admin", "manager"], async (request, { user }) => 
 
     const clientId = Number(result.lastInsertRowid);
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",
@@ -142,7 +142,7 @@ export const POST = withRole(["admin", "manager"], async (request, { user }) => 
       entityName: data.company_name,
     });
 
-    const client = queryOne("SELECT * FROM clients WHERE id = ?", [clientId]);
+    const client = await queryOne("SELECT * FROM clients WHERE id = ?", [clientId]);
     return NextResponse.json(client, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

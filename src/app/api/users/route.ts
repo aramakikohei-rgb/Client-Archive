@@ -8,7 +8,7 @@ import type { User } from "@/lib/types";
 
 export const GET = withAuth(async () => {
   try {
-    const users = query<User>(
+    const users = await query<User>(
       `SELECT id, email, full_name, full_name_kana, role, department, title,
               phone, is_active, last_login_at, created_at, updated_at
        FROM users
@@ -35,7 +35,7 @@ export const POST = withRole(["admin"], async (request, { user }) => {
     const data = parsed.data;
 
     // Check if email already exists
-    const existing = queryOne<{ id: number }>(
+    const existing = await queryOne<{ id: number }>(
       "SELECT id FROM users WHERE email = ?",
       [data.email]
     );
@@ -48,7 +48,7 @@ export const POST = withRole(["admin"], async (request, { user }) => {
 
     const passwordHash = hashPassword(data.password);
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO users (
         email, password_hash, full_name, full_name_kana, role,
         department, title, phone
@@ -67,7 +67,7 @@ export const POST = withRole(["admin"], async (request, { user }) => {
 
     const newUserId = Number(result.lastInsertRowid);
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",
@@ -77,7 +77,7 @@ export const POST = withRole(["admin"], async (request, { user }) => {
       details: { email: data.email, role: data.role },
     });
 
-    const created = queryOne<User>(
+    const created = await queryOne<User>(
       `SELECT id, email, full_name, full_name_kana, role, department, title,
               phone, is_active, last_login_at, created_at, updated_at
        FROM users WHERE id = ?`,

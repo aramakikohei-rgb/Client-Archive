@@ -8,7 +8,7 @@ export const GET = withAuth(async (request, { params }) => {
   try {
     const clientId = parseInt(params?.id || "0", 10);
 
-    const client = queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
+    const client = await queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
     if (!client) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
@@ -21,13 +21,13 @@ export const GET = withAuth(async (request, { params }) => {
     );
     const offset = (page - 1) * limit;
 
-    const countResult = queryOne<{ count: number }>(
+    const countResult = await queryOne<{ count: number }>(
       "SELECT COUNT(*) as count FROM interactions WHERE client_id = ?",
       [clientId]
     );
     const total = countResult?.count || 0;
 
-    const data = query<Interaction>(
+    const data = await query<Interaction>(
       `SELECT i.*, u.full_name as created_by_name,
         (SELECT COUNT(*) FROM interaction_attachments ia WHERE ia.interaction_id = i.id) as attachment_count
        FROM interactions i

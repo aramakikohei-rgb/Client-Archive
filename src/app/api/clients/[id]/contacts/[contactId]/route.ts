@@ -10,7 +10,7 @@ export const GET = withAuth(async (_request, { params }) => {
     const clientId = parseInt(params?.id || "0", 10);
     const contactId = parseInt(params?.contactId || "0", 10);
 
-    const contact = queryOne<ClientContact>(
+    const contact = await queryOne<ClientContact>(
       "SELECT * FROM client_contacts WHERE id = ? AND client_id = ?",
       [contactId, clientId]
     );
@@ -29,7 +29,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
     const clientId = parseInt(params?.id || "0", 10);
     const contactId = parseInt(params?.contactId || "0", 10);
 
-    const existing = queryOne<ClientContact>(
+    const existing = await queryOne<ClientContact>(
       "SELECT * FROM client_contacts WHERE id = ? AND client_id = ?",
       [contactId, clientId]
     );
@@ -77,12 +77,12 @@ export const PUT = withAuth(async (request, { user, params }) => {
     fields.push("updated_at = CURRENT_TIMESTAMP");
     values.push(contactId, clientId);
 
-    execute(
+    await execute(
       `UPDATE client_contacts SET ${fields.join(", ")} WHERE id = ? AND client_id = ?`,
       values
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "UPDATE",
@@ -92,7 +92,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
       details: { client_id: clientId, changed_fields: changedFields },
     });
 
-    const updated = queryOne("SELECT * FROM client_contacts WHERE id = ?", [contactId]);
+    const updated = await queryOne("SELECT * FROM client_contacts WHERE id = ?", [contactId]);
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -104,7 +104,7 @@ export const DELETE = withAuth(async (_request, { user, params }) => {
     const clientId = parseInt(params?.id || "0", 10);
     const contactId = parseInt(params?.contactId || "0", 10);
 
-    const existing = queryOne<ClientContact>(
+    const existing = await queryOne<ClientContact>(
       "SELECT * FROM client_contacts WHERE id = ? AND client_id = ?",
       [contactId, clientId]
     );
@@ -112,12 +112,12 @@ export const DELETE = withAuth(async (_request, { user, params }) => {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    execute(
+    await execute(
       "UPDATE client_contacts SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND client_id = ?",
       [contactId, clientId]
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "DELETE",

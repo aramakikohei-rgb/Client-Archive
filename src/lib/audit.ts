@@ -13,12 +13,12 @@ interface AuditParams {
   ipAddress?: string | null;
 }
 
-export function logAudit(params: AuditParams): void {
+export async function logAudit(params: AuditParams): Promise<void> {
   const timestamp = new Date().toISOString();
   const detailsJson = params.details ? JSON.stringify(params.details) : null;
 
   // Get the last audit entry's hash for chain
-  const lastEntry = queryOne<{ entry_hash: string }>(
+  const lastEntry = await queryOne<{ entry_hash: string }>(
     "SELECT entry_hash FROM audit_log ORDER BY id DESC LIMIT 1"
   );
   const previousHash = lastEntry?.entry_hash || null;
@@ -27,7 +27,7 @@ export function logAudit(params: AuditParams): void {
   const data = `${timestamp}|${params.userId}|${params.action}|${params.entityType}|${params.entityId ?? ""}|${detailsJson ?? ""}|${previousHash ?? "genesis"}`;
   const entryHash = createHash("sha256").update(data).digest("hex");
 
-  execute(
+  await execute(
     `INSERT INTO audit_log (timestamp, user_id, user_name, action, entity_type, entity_id, entity_name, details, ip_address, previous_hash, entry_hash)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [

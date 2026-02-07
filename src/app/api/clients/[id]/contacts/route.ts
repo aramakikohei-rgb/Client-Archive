@@ -9,12 +9,12 @@ export const GET = withAuth(async (_request, { params }) => {
   try {
     const clientId = parseInt(params?.id || "0", 10);
 
-    const client = queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
+    const client = await queryOne("SELECT id FROM clients WHERE id = ?", [clientId]);
     if (!client) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    const contacts = query<ClientContact>(
+    const contacts = await query<ClientContact>(
       "SELECT * FROM client_contacts WHERE client_id = ? AND is_active = 1 ORDER BY is_primary_contact DESC, last_name ASC",
       [clientId]
     );
@@ -29,7 +29,7 @@ export const POST = withAuth(async (request, { user, params }) => {
   try {
     const clientId = parseInt(params?.id || "0", 10);
 
-    const client = queryOne<{ id: number; company_name: string }>(
+    const client = await queryOne<{ id: number; company_name: string }>(
       "SELECT id, company_name FROM clients WHERE id = ?",
       [clientId]
     );
@@ -48,7 +48,7 @@ export const POST = withAuth(async (request, { user, params }) => {
 
     const data = parsed.data;
 
-    const result = execute(
+    const result = await execute(
       `INSERT INTO client_contacts (
         client_id, first_name, last_name, first_name_kana, last_name_kana,
         title, department, email, phone, mobile,
@@ -77,7 +77,7 @@ export const POST = withAuth(async (request, { user, params }) => {
 
     const contactId = Number(result.lastInsertRowid);
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "CREATE",
@@ -87,7 +87,7 @@ export const POST = withAuth(async (request, { user, params }) => {
       details: { client_id: clientId, client_name: client.company_name },
     });
 
-    const contact = queryOne("SELECT * FROM client_contacts WHERE id = ?", [contactId]);
+    const contact = await queryOne("SELECT * FROM client_contacts WHERE id = ?", [contactId]);
     return NextResponse.json(contact, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

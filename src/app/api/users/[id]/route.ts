@@ -8,7 +8,7 @@ export const GET = withAuth(async (_request, { params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const user = queryOne<User>(
+    const user = await queryOne<User>(
       `SELECT id, email, full_name, full_name_kana, role, department, title,
               phone, is_active, last_login_at, created_at, updated_at
        FROM users WHERE id = ?`,
@@ -28,7 +28,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const existing = queryOne<User>(
+    const existing = await queryOne<User>(
       "SELECT * FROM users WHERE id = ?",
       [id]
     );
@@ -77,12 +77,12 @@ export const PUT = withAuth(async (request, { user, params }) => {
     fields.push("updated_at = CURRENT_TIMESTAMP");
     values.push(id);
 
-    execute(
+    await execute(
       `UPDATE users SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: roleChanged ? "ROLE_CHANGE" : "UPDATE",
@@ -92,7 +92,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
       details: { changed_fields: changedFields },
     });
 
-    const updated = queryOne<User>(
+    const updated = await queryOne<User>(
       `SELECT id, email, full_name, full_name_kana, role, department, title,
               phone, is_active, last_login_at, created_at, updated_at
        FROM users WHERE id = ?`,

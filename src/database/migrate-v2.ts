@@ -1,21 +1,21 @@
 /**
  * Migration v2: Add financial fields to clients + business_cards table
  * Run: npx tsx src/database/migrate-v2.ts
+ *
+ * NOTE: This migration has already been applied. The schema.sql now includes
+ * all v2 columns and tables. This file is kept for reference only.
  */
 
-import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
 import path from "path";
 
 const DB_PATH = path.join(process.cwd(), "data", "cimp.db");
 
-function migrate() {
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+async function migrate() {
+  const db = createClient({ url: `file:${DB_PATH}` });
 
   console.log("Starting migration v2...");
 
-  // Add financial columns to clients (SQLite ALTER TABLE only supports ADD COLUMN)
   const newColumns = [
     "capital_amount_jpy REAL",
     "revenue_jpy REAL",
@@ -28,7 +28,7 @@ function migrate() {
   for (const col of newColumns) {
     const colName = col.split(" ")[0];
     try {
-      db.exec(`ALTER TABLE clients ADD COLUMN ${col}`);
+      await db.execute(`ALTER TABLE clients ADD COLUMN ${col}`);
       console.log(`  Added column: clients.${colName}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -40,8 +40,7 @@ function migrate() {
     }
   }
 
-  // Create business_cards table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS business_cards (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       contact_id INTEGER REFERENCES client_contacts(id) ON DELETE SET NULL,
@@ -67,18 +66,11 @@ function migrate() {
   `);
   console.log("  Created table: business_cards");
 
-  // Create indexes
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_business_cards_client ON business_cards(client_id)`);
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_business_cards_owner ON business_cards(owner_user_id)`);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_business_cards_client ON business_cards(client_id)`);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_business_cards_owner ON business_cards(owner_user_id)`);
   console.log("  Created indexes for business_cards");
 
-  // Note: We cannot ALTER CHECK constraints in SQLite, but the audit_log
-  // entity_type check is only enforced on INSERT. For the prototype we
-  // recreate the table if needed, but since it's additive and the old
-  // constraint doesn't block new code, we skip this for now.
-
-  db.close();
   console.log("Migration v2 complete!");
 }
 
-migrate();
+migrate().catch(console.error);

@@ -9,7 +9,7 @@ export const GET = withAuth(async (_request, { params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const interaction = queryOne<Interaction>(
+    const interaction = await queryOne<Interaction>(
       `SELECT i.*, u.full_name as created_by_name, c.company_name
        FROM interactions i
        JOIN users u ON i.created_by = u.id
@@ -21,7 +21,7 @@ export const GET = withAuth(async (_request, { params }) => {
       return NextResponse.json({ error: "Interaction not found" }, { status: 404 });
     }
 
-    const attachments = query(
+    const attachments = await query(
       `SELECT ia.*, u.full_name as uploaded_by_name
        FROM interaction_attachments ia
        JOIN users u ON ia.uploaded_by = u.id
@@ -40,7 +40,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
   try {
     const id = parseInt(params?.id || "0", 10);
 
-    const existing = queryOne<Interaction>(
+    const existing = await queryOne<Interaction>(
       "SELECT * FROM interactions WHERE id = ?",
       [id]
     );
@@ -95,12 +95,12 @@ export const PUT = withAuth(async (request, { user, params }) => {
     fields.push("updated_at = CURRENT_TIMESTAMP");
     values.push(id);
 
-    execute(
+    await execute(
       `UPDATE interactions SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
 
-    logAudit({
+    await logAudit({
       userId: user.id,
       userName: user.full_name,
       action: "UPDATE",
@@ -110,7 +110,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
       details: { changed_fields: changedFields },
     });
 
-    const updated = queryOne(
+    const updated = await queryOne(
       `SELECT i.*, u.full_name as created_by_name, c.company_name
        FROM interactions i
        JOIN users u ON i.created_by = u.id
