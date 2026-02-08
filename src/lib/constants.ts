@@ -43,7 +43,6 @@ export const API_ROUTES = {
   CLIENT_BUSINESS_CARDS: (id: number) => `/api/clients/${id}/business-cards`,
   INTERACTIONS: "/api/interactions",
   INTERACTION: (id: number) => `/api/interactions/${id}`,
-  INTERACTION_LOCK: (id: number) => `/api/interactions/${id}/lock`,
   INTERACTION_ATTACHMENTS: (id: number) => `/api/interactions/${id}/attachments`,
   INTERACTION_ATTACHMENT_DOWNLOAD: (interactionId: number, attachmentId: number) =>
     `/api/interactions/${interactionId}/attachments/${attachmentId}/download`,

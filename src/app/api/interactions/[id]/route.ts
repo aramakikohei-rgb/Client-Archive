@@ -49,13 +49,6 @@ export const PUT = withAuth(async (request, { user, params }) => {
       return NextResponse.json({ error: "Interaction not found" }, { status: 404 });
     }
 
-    if (existing.is_locked) {
-      return NextResponse.json(
-        { error: "Interaction is locked and cannot be modified" },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
     const updateSchema = createInteractionSchema.partial();
     const parsed = updateSchema.safeParse(body);

@@ -21,7 +21,6 @@ import type { InteractionAttachment } from "@/lib/types";
 
 interface AttachmentSectionProps {
   interactionId: number;
-  isLocked: boolean;
 }
 
 function getFileIcon(fileType: string) {
@@ -40,7 +39,7 @@ function getFileIcon(fileType: string) {
   return <File className="h-5 w-5 text-slate-400" />;
 }
 
-export function AttachmentSection({ interactionId, isLocked }: AttachmentSectionProps) {
+export function AttachmentSection({ interactionId }: AttachmentSectionProps) {
   const [attachments, setAttachments] = useState<InteractionAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -116,30 +115,28 @@ export function AttachmentSection({ interactionId, isLocked }: AttachmentSection
               添付ファイル {attachments.length > 0 && `(${attachments.length})`}
             </h2>
           </div>
-          {!isLocked && (
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleUpload}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.eml,.png,.jpg,.jpeg"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
-                )}
-                {uploading ? "アップロード中..." : "ファイル追加"}
-              </Button>
-            </div>
-          )}
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleUpload}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.eml,.png,.jpg,.jpeg"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {uploading ? "アップロード中..." : "ファイル追加"}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -189,20 +186,18 @@ export function AttachmentSection({ interactionId, isLocked }: AttachmentSection
                   >
                     <Download className="h-4 w-4" />
                   </a>
-                  {!isLocked && (
-                    <button
-                      onClick={() => handleDelete(attachment.id)}
-                      disabled={deleting === attachment.id}
-                      className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                      title="削除"
-                    >
-                      {deleting === attachment.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDelete(attachment.id)}
+                    disabled={deleting === attachment.id}
+                    className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    title="削除"
+                  >
+                    {deleting === attachment.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

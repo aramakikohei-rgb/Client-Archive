@@ -214,8 +214,6 @@ export interface Interaction {
   proposal_status: ProposalStatus | null;
   sentiment: Sentiment | null;
   priority: Priority;
-  is_locked: number;
-  locked_at: string | null;
   created_by: number;
   created_by_name?: string;
   created_at: string;

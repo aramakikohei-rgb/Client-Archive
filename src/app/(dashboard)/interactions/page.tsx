@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Loader2,
   MessageSquare,
-  Lock,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -248,7 +247,6 @@ export default function InteractionsPage() {
                   <th className="px-6 py-3 font-medium text-slate-500">担当者</th>
                   <th className="px-6 py-3 font-medium text-slate-500">感触</th>
                   <th className="px-6 py-3 font-medium text-slate-500">優先度</th>
-                  <th className="px-6 py-3 font-medium text-slate-500">ロック</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -310,11 +308,6 @@ export default function InteractionsPage() {
                       >
                         {PRIORITY_LABELS[interaction.priority] || interaction.priority}
                       </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      {interaction.is_locked === 1 && (
-                        <Lock className="h-4 w-4 text-slate-400" />
-                      )}
                     </td>
                   </tr>
                 ))}

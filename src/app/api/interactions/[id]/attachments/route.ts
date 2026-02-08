@@ -45,10 +45,6 @@ export const POST = withAuth(async (request, { user, params }) => {
     if (!interaction) {
       return NextResponse.json({ error: "対応履歴が見つかりません" }, { status: 404 });
     }
-    if (interaction.is_locked) {
-      return NextResponse.json({ error: "ロックされた対応履歴には添付できません" }, { status: 403 });
-    }
-
     const countResult = await queryOne<{ count: number }>(
       "SELECT COUNT(*) as count FROM interaction_attachments WHERE interaction_id = ?",
       [interactionId]

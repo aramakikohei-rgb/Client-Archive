@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Loader2,
-  Lock,
   Calendar,
   Clock,
   MapPin,
@@ -24,7 +23,7 @@ import {
   SENTIMENT_LABELS,
   PRIORITY_LABELS,
 } from "@/lib/constants";
-import { formatDate, formatDateTime, formatCurrency } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { AttachmentSection } from "@/components/interaction/AttachmentSection";
 import type { Interaction } from "@/lib/types";
 
@@ -35,7 +34,6 @@ export default function InteractionDetailPage() {
   const [interaction, setInteraction] = useState<Interaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [locking, setLocking] = useState(false);
 
   useEffect(() => {
     async function fetchInteraction() {
@@ -53,27 +51,6 @@ export default function InteractionDetailPage() {
     fetchInteraction();
   }, [interactionId]);
 
-  async function handleLock() {
-    setLocking(true);
-    try {
-      const res = await fetch(API_ROUTES.INTERACTION_LOCK(interactionId), {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "ロックに失敗しました");
-      }
-      const data = await res.json();
-      setInteraction((prev) =>
-        prev ? { ...prev, is_locked: 1, locked_at: data.locked_at || new Date().toISOString() } : prev
-      );
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "エラーが発生しました");
-    } finally {
-      setLocking(false);
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -90,59 +67,31 @@ export default function InteractionDetailPage() {
     );
   }
 
-  const isLocked = interaction.is_locked === 1;
-
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Link href={ROUTES.INTERACTIONS}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              戻る
-            </Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-slate-900">{interaction.subject}</h1>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  INTERACTION_TYPE_COLORS[interaction.interaction_type] ||
-                  "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {INTERACTION_TYPE_LABELS[interaction.interaction_type] ||
-                  interaction.interaction_type}
-              </span>
-              {isLocked && (
-                <Badge variant="default">
-                  <Lock className="mr-1 h-3 w-3" />
-                  ロック済み
-                </Badge>
-              )}
-            </div>
+      <div className="flex items-center gap-4">
+        <Link href={ROUTES.INTERACTIONS}>
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            戻る
+          </Button>
+        </Link>
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-slate-900">{interaction.subject}</h1>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                INTERACTION_TYPE_COLORS[interaction.interaction_type] ||
+                "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {INTERACTION_TYPE_LABELS[interaction.interaction_type] ||
+                interaction.interaction_type}
+            </span>
           </div>
         </div>
-        {!isLocked && (
-          <Button variant="secondary" onClick={handleLock} disabled={locking}>
-            {locking ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Lock className="mr-2 h-4 w-4" />
-            )}
-            ロックする
-          </Button>
-        )}
       </div>
-
-      {/* Locked notice */}
-      {isLocked && interaction.locked_at && (
-        <div className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <Lock className="mr-2 inline h-4 w-4" />
-          この対応履歴は {formatDateTime(interaction.locked_at)} にロックされました。以降の編集はできません。
-        </div>
-      )}
 
       {/* Details Card */}
       <Card>
@@ -342,7 +291,7 @@ export default function InteractionDetailPage() {
       )}
 
       {/* Attachments */}
-      <AttachmentSection interactionId={interactionId} isLocked={isLocked} />
+      <AttachmentSection interactionId={interactionId} />
     </div>
   );
 }

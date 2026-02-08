@@ -16,10 +16,6 @@ export const DELETE = withAuth(async (_request, { user, params }) => {
     if (!interaction) {
       return NextResponse.json({ error: "対応履歴が見つかりません" }, { status: 404 });
     }
-    if (interaction.is_locked) {
-      return NextResponse.json({ error: "ロックされた対応履歴の添付は削除できません" }, { status: 403 });
-    }
-
     const attachment = await queryOne<{ id: number; file_name: string }>(
       "SELECT id, file_name FROM interaction_attachments WHERE id = ? AND interaction_id = ?",
       [attachmentId, interactionId]
