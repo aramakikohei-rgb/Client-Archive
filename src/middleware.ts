@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     if (token) {
       try {
         await jwtVerify(token, secret);
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/clients", request.url));
       } catch {
         // Invalid token, let them access login
       }
@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
   try {
     await jwtVerify(token, secret);
     if (pathname === "/") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/clients", request.url));
     }
     return NextResponse.next();
   } catch {
