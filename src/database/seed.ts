@@ -3,28 +3,34 @@ import path from "path";
 import fs from "fs";
 import { createHash } from "crypto";
 
-const dbPath = path.join(process.cwd(), "data", "cimp.db");
-const dir = path.dirname(dbPath);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
+const isRemote = !!process.env.TURSO_DATABASE_URL && !process.env.TURSO_DATABASE_URL.startsWith("file:");
 
-// Remove existing database
-if (fs.existsSync(dbPath)) {
-  fs.unlinkSync(dbPath);
-  // Also remove WAL/SHM files if they exist
-  if (fs.existsSync(dbPath + "-wal")) fs.unlinkSync(dbPath + "-wal");
-  if (fs.existsSync(dbPath + "-shm")) fs.unlinkSync(dbPath + "-shm");
-  console.log("Removed existing database");
+if (!isRemote) {
+  const dbPath = path.join(process.cwd(), "data", "cimp.db");
+  const dir = path.dirname(dbPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  // Remove existing database
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    if (fs.existsSync(dbPath + "-wal")) fs.unlinkSync(dbPath + "-wal");
+    if (fs.existsSync(dbPath + "-shm")) fs.unlinkSync(dbPath + "-shm");
+    console.log("Removed existing database");
+  }
 }
 
 const db = createClient({
-  url: `file:${dbPath}`,
+  url: process.env.TURSO_DATABASE_URL || `file:${path.join(process.cwd(), "data", "cimp.db")}`,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
 async function seed() {
-  await db.execute("PRAGMA journal_mode = WAL");
-  await db.execute("PRAGMA foreign_keys = ON");
+  if (!isRemote) {
+    await db.execute("PRAGMA journal_mode = WAL");
+    await db.execute("PRAGMA foreign_keys = ON");
+  }
 
   // Read and execute schema
   const schemaPath = path.join(process.cwd(), "src", "database", "schema.sql");
@@ -32,7 +38,14 @@ async function seed() {
   const statements = schema
     .split(";")
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith("PRAGMA"));
+    .filter((s) => {
+      if (s.length === 0) return false;
+      // Remove comment lines to check the actual SQL statement
+      const withoutComments = s.replace(/--.*$/gm, "").trim();
+      if (withoutComments.length === 0) return false;
+      if (withoutComments.toUpperCase().startsWith("PRAGMA")) return false;
+      return true;
+    });
 
   for (const statement of statements) {
     await db.execute(statement + ";");
@@ -625,7 +638,7 @@ async function seed() {
 
   db.close();
   console.log("\nDatabase seeded successfully!");
-  console.log(`Database location: ${dbPath}`);
+  console.log(`Database: ${process.env.TURSO_DATABASE_URL || "file:data/cimp.db"}`);
 }
 
 seed().catch((err) => {

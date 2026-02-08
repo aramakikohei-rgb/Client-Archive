@@ -21,10 +21,19 @@ export async function initializeDatabase(): Promise<void> {
   const statements = schema
     .split(";")
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith("PRAGMA"));
+    .filter((s) => {
+      if (s.length === 0) return false;
+      const withoutComments = s.replace(/--.*$/gm, "").trim();
+      if (withoutComments.length === 0) return false;
+      if (withoutComments.toUpperCase().startsWith("PRAGMA")) return false;
+      return true;
+    });
 
-  await db.execute("PRAGMA journal_mode = WAL");
-  await db.execute("PRAGMA foreign_keys = ON");
+  const isRemote = (process.env.TURSO_DATABASE_URL || "").startsWith("libsql://");
+  if (!isRemote) {
+    await db.execute("PRAGMA journal_mode = WAL");
+    await db.execute("PRAGMA foreign_keys = ON");
+  }
 
   for (const statement of statements) {
     await db.execute(statement + ";");
