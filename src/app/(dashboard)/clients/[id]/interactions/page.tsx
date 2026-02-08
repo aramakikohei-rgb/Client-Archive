@@ -16,6 +16,7 @@ import {
   SENTIMENT_LABELS,
 } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { InteractionSummaryPanel } from "@/components/interaction/InteractionSummaryPanel";
 import type { Interaction } from "@/lib/types";
 
 export default function ClientInteractionsPage() {
@@ -41,6 +42,8 @@ export default function ClientInteractionsPage() {
 
   return (
     <div className="space-y-4">
+      <InteractionSummaryPanel clientId={clientId} />
+
       <div className="flex justify-end">
         <Link href={`${ROUTES.INTERACTION_NEW}?client_id=${clientId}`}>
           <Button size="sm">

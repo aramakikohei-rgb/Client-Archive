@@ -44,6 +44,12 @@ export const API_ROUTES = {
   INTERACTIONS: "/api/interactions",
   INTERACTION: (id: number) => `/api/interactions/${id}`,
   INTERACTION_LOCK: (id: number) => `/api/interactions/${id}/lock`,
+  INTERACTION_ATTACHMENTS: (id: number) => `/api/interactions/${id}/attachments`,
+  INTERACTION_ATTACHMENT_DOWNLOAD: (interactionId: number, attachmentId: number) =>
+    `/api/interactions/${interactionId}/attachments/${attachmentId}/download`,
+  INTERACTION_ATTACHMENT: (interactionId: number, attachmentId: number) =>
+    `/api/interactions/${interactionId}/attachments/${attachmentId}`,
+  CLIENT_INTERACTION_SUMMARY: (id: number) => `/api/clients/${id}/interactions/summary`,
   BUSINESS_CARDS: "/api/business-cards",
   BUSINESS_CARD: (id: number) => `/api/business-cards/${id}`,
   HANDOVERS: "/api/handovers",
@@ -163,3 +169,20 @@ export const BUSINESS_CARD_PAGE_SIZE = 30;
 export const JWT_SECRET = "cimp-prototype-secret-key-change-in-production";
 export const JWT_EXPIRY = "24h";
 export const COOKIE_NAME = "cimp-auth-token";
+
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_ATTACHMENTS_PER_INTERACTION = 10;
+export const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/msword",
+  "application/vnd.ms-excel",
+  "application/vnd.ms-powerpoint",
+  "text/plain",
+  "text/csv",
+  "message/rfc822",
+  "image/png",
+  "image/jpeg",
+];

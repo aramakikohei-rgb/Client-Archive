@@ -221,6 +221,61 @@ export interface Interaction {
   created_at: string;
   updated_at: string;
   attachment_count?: number;
+  attachments?: InteractionAttachment[];
+}
+
+export interface InteractionAttachment {
+  id: number;
+  interaction_id: number;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_path: string;
+  uploaded_by: number;
+  uploaded_by_name?: string;
+  created_at: string;
+}
+
+export interface ClientInteractionSummary {
+  total_count: number;
+  last_interaction_date: string | null;
+  first_interaction_date: string | null;
+  type_breakdown: {
+    type: InteractionType;
+    label: string;
+    count: number;
+  }[];
+  sentiment_breakdown: {
+    sentiment: Sentiment;
+    count: number;
+  }[];
+  recent_interactions: {
+    id: number;
+    subject: string;
+    interaction_type: InteractionType;
+    interaction_date: string;
+    sentiment: Sentiment | null;
+    created_by_name: string;
+    attachment_count: number;
+  }[];
+  pending_follow_ups: {
+    id: number;
+    subject: string;
+    follow_up_date: string;
+    next_steps: string;
+    interaction_type: InteractionType;
+    created_by_name: string;
+  }[];
+  recent_attachments: {
+    id: number;
+    file_name: string;
+    file_type: string;
+    file_size: number;
+    interaction_id: number;
+    interaction_subject: string;
+    uploaded_by_name: string;
+    created_at: string;
+  }[];
 }
 
 // ============================================================

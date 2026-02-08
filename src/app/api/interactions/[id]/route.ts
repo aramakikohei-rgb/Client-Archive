@@ -22,7 +22,8 @@ export const GET = withAuth(async (_request, { params }) => {
     }
 
     const attachments = await query(
-      `SELECT ia.*, u.full_name as uploaded_by_name
+      `SELECT ia.id, ia.interaction_id, ia.file_name, ia.file_type, ia.file_size,
+              ia.file_path, ia.uploaded_by, u.full_name as uploaded_by_name, ia.created_at
        FROM interaction_attachments ia
        JOIN users u ON ia.uploaded_by = u.id
        WHERE ia.interaction_id = ?

@@ -195,6 +195,7 @@ CREATE TABLE IF NOT EXISTS interaction_attachments (
     file_type TEXT NOT NULL,
     file_size INTEGER NOT NULL,
     file_path TEXT NOT NULL,
+    file_data TEXT,
     uploaded_by INTEGER NOT NULL REFERENCES users(id),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -25,6 +25,7 @@ import {
   PRIORITY_LABELS,
 } from "@/lib/constants";
 import { formatDate, formatDateTime, formatCurrency } from "@/lib/utils";
+import { AttachmentSection } from "@/components/interaction/AttachmentSection";
 import type { Interaction } from "@/lib/types";
 
 export default function InteractionDetailPage() {
@@ -339,6 +340,9 @@ export default function InteractionDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Attachments */}
+      <AttachmentSection interactionId={interactionId} isLocked={isLocked} />
     </div>
   );
 }
