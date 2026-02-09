@@ -49,6 +49,7 @@ export const API_ROUTES = {
   INTERACTION_ATTACHMENT: (interactionId: number, attachmentId: number) =>
     `/api/interactions/${interactionId}/attachments/${attachmentId}`,
   CLIENT_INTERACTION_SUMMARY: (id: number) => `/api/clients/${id}/interactions/summary`,
+  CLIENT_FINANCIALS: (id: number) => `/api/clients/${id}/financials`,
   BUSINESS_CARDS: "/api/business-cards",
   BUSINESS_CARD: (id: number) => `/api/business-cards/${id}`,
   HANDOVERS: "/api/handovers",

@@ -334,6 +334,56 @@ export interface HandoverClientSection {
 }
 
 // ============================================================
+// Client Financial Types
+// ============================================================
+
+export type PeriodType = "annual" | "q1" | "q2" | "q3" | "q4" | "h1" | "h2";
+export type ForecastRevision = "up" | "down" | "unchanged" | "new";
+
+export interface ClientFinancial {
+  id: number;
+  client_id: number;
+  fiscal_period: string;
+  period_type: PeriodType;
+  period_label: string | null;
+  accounting_standard: string | null;
+  revenue_jpy: number | null;
+  operating_profit_jpy: number | null;
+  net_income_jpy: number | null;
+  revenue_prev_jpy: number | null;
+  operating_profit_prev_jpy: number | null;
+  net_income_prev_jpy: number | null;
+  forecast_revenue_jpy: number | null;
+  forecast_operating_profit_jpy: number | null;
+  forecast_revision: ForecastRevision | null;
+  forecast_revision_label: string | null;
+  progress_rate: number | null;
+  dividend_per_share: number | null;
+  dividend_prev_per_share: number | null;
+  dividend_note: string | null;
+  announcement_date: string | null;
+  report_date_range: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ClientSegment {
+  id: number;
+  client_id: number;
+  fiscal_period: string;
+  segment_name: string;
+  segment_order: number;
+  revenue_jpy: number | null;
+  revenue_prev_jpy: number | null;
+  operating_profit_jpy: number | null;
+  operating_profit_prev_jpy: number | null;
+  revenue_share_pct: number | null;
+  highlight: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+// ============================================================
 // Audit Types
 // ============================================================
 

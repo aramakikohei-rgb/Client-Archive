@@ -247,6 +247,55 @@ CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id);
 
+-- Client Financial Periods (P/L data per fiscal period)
+CREATE TABLE IF NOT EXISTS client_financials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    fiscal_period TEXT NOT NULL,          -- e.g. '2026/3' (fiscal year ending)
+    period_type TEXT NOT NULL CHECK(period_type IN ('annual', 'q1', 'q2', 'q3', 'q4', 'h1', 'h2')),
+    period_label TEXT,                    -- e.g. '2025/9 (当期Q2累積)'
+    accounting_standard TEXT DEFAULT '日本基準',
+    revenue_jpy REAL,                     -- 売上高 (百万円)
+    operating_profit_jpy REAL,            -- 営業利益 (百万円)
+    net_income_jpy REAL,                  -- 最終利益 (百万円)
+    revenue_prev_jpy REAL,               -- 前期売上高
+    operating_profit_prev_jpy REAL,      -- 前期営業利益
+    net_income_prev_jpy REAL,            -- 前期最終利益
+    forecast_revenue_jpy REAL,           -- 通期予想売上高
+    forecast_operating_profit_jpy REAL,  -- 通期予想営業利益
+    forecast_revision TEXT CHECK(forecast_revision IN ('up', 'down', 'unchanged', 'new')),
+    forecast_revision_label TEXT,         -- e.g. '通期会社予想 上方修正'
+    progress_rate REAL,                  -- 進捗率 (%)
+    dividend_per_share REAL,             -- 配当金 (円)
+    dividend_prev_per_share REAL,        -- 前期配当金 (円)
+    dividend_note TEXT,                  -- 配当備考
+    announcement_date TEXT,              -- 決算発表時刻
+    report_date_range TEXT,              -- e.g. '25/4 - 25/9月'
+    notes TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_financials_client ON client_financials(client_id);
+
+-- Client Business Segments
+CREATE TABLE IF NOT EXISTS client_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    fiscal_period TEXT NOT NULL,
+    segment_name TEXT NOT NULL,
+    segment_order INTEGER DEFAULT 0,
+    revenue_jpy REAL,                    -- セグメント売上高 (百万円)
+    revenue_prev_jpy REAL,              -- 前期セグメント売上高
+    operating_profit_jpy REAL,           -- セグメント利益 (百万円)
+    operating_profit_prev_jpy REAL,     -- 前期セグメント利益
+    revenue_share_pct REAL,             -- 売上構成比 (%)
+    highlight TEXT,                      -- e.g. '大幅増益', '減益'
+    notes TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_segments_client ON client_segments(client_id);
+
 -- Views
 CREATE VIEW IF NOT EXISTS client_summary AS
 SELECT

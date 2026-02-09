@@ -279,7 +279,7 @@ export default function InteractionsPage() {
                     <td className="px-6 py-4 text-slate-600">
                       {interaction.created_by_name || "-"}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="whitespace-nowrap px-6 py-4">
                       {interaction.sentiment ? (
                         <Badge
                           variant={
@@ -296,7 +296,7 @@ export default function InteractionsPage() {
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <Badge
                         variant={
                           interaction.priority === "urgent"
